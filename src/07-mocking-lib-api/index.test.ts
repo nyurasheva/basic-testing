@@ -1,44 +1,62 @@
 import axios from 'axios';
 import { throttledGetDataFromApi } from './index';
 
-jest.mock('lodash', () => ({
-  throttle: <T extends (...args: unknown[]) => unknown>(fn: T): T => fn,
-}));
+jest.mock('axios');
+
+const mockedAxios = jest.mocked(axios, { shallow: false });
+const BASE_URL = 'https://jsonplaceholder.typicode.com';
+const successResponseData = {
+  data: 'Fake Data',
+  status: 200,
+  statusText: 'OK',
+  headers: {},
+  config: {},
+  request: {},
+};
+const urlPath = 'nonExistingPath';
 
 describe('throttledGetDataFromApi', () => {
-  const mockGet = jest.fn();
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockedAxios.create.mockReturnThis();
+    mockedAxios.get.mockResolvedValue(successResponseData);
+  });
 
-    (axios.create as jest.Mock) = jest.fn(() => ({
-      get: mockGet,
-    }));
+  afterEach(() => {
+    jest.runAllTimers();
   });
 
   test('should create instance with provided base url', async () => {
-    mockGet.mockResolvedValue({ data: {} });
-
-    await throttledGetDataFromApi('/posts');
-
-    expect(axios.create).toHaveBeenCalledWith({
-      baseURL: 'https://jsonplaceholder.typicode.com',
+    await throttledGetDataFromApi(urlPath);
+    expect(mockedAxios.create).toHaveBeenCalledWith({
+      baseURL: BASE_URL,
     });
   });
 
   test('should perform request to correct provided url', async () => {
-    mockGet.mockResolvedValue({ data: 'fake data' });
-
-    await throttledGetDataFromApi('/posts');
-
-    expect(mockGet).toHaveBeenCalledWith('/posts');
+    await throttledGetDataFromApi(urlPath);
+    expect(mockedAxios.get).toHaveBeenCalledWith(urlPath);
   });
 
   test('should return response data', async () => {
-    mockGet.mockResolvedValue({ data: { title: 'Test Title' } });
+    const result = await throttledGetDataFromApi(urlPath);
+    expect(result).toBe(successResponseData.data);
+  });
 
-    const result = await throttledGetDataFromApi('/posts');
+  test('should handle axios error correctly', async () => {
+    const errorMessage = 'Request failed';
+    mockedAxios.get.mockRejectedValueOnce(new Error(errorMessage));
 
-    expect(result).toEqual({ title: 'Test Title' });
+    await expect(throttledGetDataFromApi(urlPath)).rejects.toThrow(
+      errorMessage,
+    );
   });
 });

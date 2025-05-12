@@ -36,11 +36,13 @@ describe('simpleCalculator tests', () => {
   });
 
   test('should return null for invalid arguments', () => {
-    const result1 = simpleCalculator({ a: 'a', b: 3, action: Action.Add });
-    const result2 = simpleCalculator({ a: 2, b: 'b', action: Action.Add });
-    const result3 = simpleCalculator({ a: 'a', b: 'b', action: Action.Add });
-    expect(result1).toBeNull();
-    expect(result2).toBeNull();
-    expect(result3).toBeNull();
+    const invalidInputs = [
+      { a: 'a', b: 3, action: Action.Add },
+      { a: 2, b: 'b', action: Action.Add },
+      { a: 'a', b: 'b', action: Action.Add },
+    ];
+    invalidInputs.forEach((input) => {
+      expect(simpleCalculator(input)).toBeNull();
+    });
   });
 });

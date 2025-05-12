@@ -8,18 +8,27 @@ import {
 
 describe('resolveValue', () => {
   test('should resolve provided value', async () => {
-    await expect(resolveValue(42)).resolves.toBe(42);
-    await expect(resolveValue('test')).resolves.toBe('test');
+    const numberRef = 42;
+    const stringRef = 'test';
+    const nullRef = null;
+    const undefinedRef = undefined;
+
+    await expect(resolveValue(numberRef)).resolves.toBe(numberRef);
+    await expect(resolveValue(stringRef)).resolves.toBe(stringRef);
+    await expect(resolveValue(nullRef)).resolves.toBeNull();
+    await expect(resolveValue(undefinedRef)).resolves.toBeUndefined();
   });
 });
 
 describe('throwError', () => {
   test('should throw error with provided message', () => {
-    expect(() => throwError('Custom message')).toThrow('Custom message');
+    const customMessage = 'Custom message';
+    expect(() => throwError(customMessage)).toThrow(customMessage);
   });
 
   test('should throw error with default message if message is not provided', () => {
-    expect(() => throwError()).toThrow('Oops!');
+    const defaultMessage = 'Oops!';
+    expect(() => throwError()).toThrow(defaultMessage);
   });
 });
 
